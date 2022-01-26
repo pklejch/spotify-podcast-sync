@@ -1,0 +1,11 @@
+---
+
+podcast_urls:
+ - "spotify:show:abc"
+ - "spotify:show:def"
+
+playlist_id: "abc123"
+
+days_back: 3
+
+remove_finished_episodes: true
