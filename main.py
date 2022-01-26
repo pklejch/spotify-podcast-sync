@@ -18,22 +18,25 @@ def cli():
 
 @cli.command()
 def add_episodes():
-  episode_ids = []
   episodes_in_playlist = SPOTIFY_CLIENT.playlist_items(CONFIG.playlist_id, fields='items.track.uri')
   existing_episode_ids = {episode['track']['uri'] for episode in episodes_in_playlist['items']}
 
   for podcast_url in CONFIG.podcast_urls:
+    episode_ids = []
     episodes = SPOTIFY_CLIENT.show_episodes(podcast_url)
 
     for episode in episodes['items']:
       episode_release_date = datetime.datetime.strptime(episode['release_date'], '%Y-%m-%d').date()
       if episode_release_date < HORIZON:
         continue
+
       if episode['resume_point']['fully_played']:
         continue
 
-      if episode['uri'] not in existing_episode_ids:
-        episode_ids.append(episode['uri'])
+      if episode['uri'] in existing_episode_ids:
+        continue
+
+      episode_ids.append(episode['uri'])
 
     if episode_ids:
       SPOTIFY_CLIENT.playlist_add_items(CONFIG.playlist_id, episode_ids)
