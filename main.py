@@ -2,8 +2,12 @@ import spotipy
 import spotipy.oauth2
 import datetime
 import click
+import logging
 
 from config import Config
+
+logging.basicConfig(level=logging.INFO)
+
 
 SCOPE = "playlist-modify-private,user-read-playback-position"
 SPOTIFY_CLIENT = spotipy.Spotify(auth_manager=spotipy.oauth2.SpotifyOAuth(scope=SCOPE))
@@ -37,6 +41,7 @@ def add_episodes():
         continue
 
       episode_ids.append(episode['uri'])
+      logging.info('Adding episode %s', episode['name'])
 
     if episode_ids:
       SPOTIFY_CLIENT.playlist_add_items(CONFIG.playlist_id, episode_ids)
@@ -52,10 +57,8 @@ def prune_episodes():
 
   for episode in episodes['episodes']:
       episode_release_date = datetime.datetime.strptime(episode['release_date'], '%Y-%m-%d').date()
-      if episode_release_date < HORIZON:
-        episodes_to_delete.add(episode['uri'])
-
-      if episode['resume_point']['fully_played'] and CONFIG.remove_finished_episodes:
+      if episode_release_date < HORIZON or episode['resume_point']['fully_played'] and CONFIG.remove_finished_episodes:
+        logging.info('Removing episode %s', episode['name'])
         episodes_to_delete.add(episode['uri'])
 
   SPOTIFY_CLIENT.playlist_remove_all_occurrences_of_items(CONFIG.playlist_id, list(episodes_to_delete))
